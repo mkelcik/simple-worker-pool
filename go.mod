@@ -1,3 +1,3 @@
 module github.com/mkelcik/simple-worker-pool
 
-go 1.16
+go 1.21

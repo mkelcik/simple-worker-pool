@@ -5,58 +5,59 @@ import (
 	"sync"
 )
 
-type JobResult interface {
-	Result() interface{}
+type JobResult[T any] interface {
+	Result() T
 	Error() error
 }
 
-type AsyncPanicError struct {
-	err error
+type AsyncPanicError[T any] struct {
+	err   error
+	value T
 }
 
-func (AsyncPanicError) Result() interface{} {
-	return nil
+func (err AsyncPanicError[T]) Result() T {
+	return err.value
 }
 
-func (err AsyncPanicError) Error() error {
+func (err AsyncPanicError[T]) Error() error {
 	return err.err
 }
 
 // NewResult just general result response
-func NewResult(err error, value interface{}) Result {
-	return Result{
+func NewResult[T any](err error, value T) Result[T] {
+	return Result[T]{
 		value: value,
 		err:   err,
 	}
 }
 
-type Result struct {
-	value interface{}
+type Result[T any] struct {
+	value T
 	err   error
 }
 
-func (r Result) Result() interface{} {
+func (r Result[T]) Result() T {
 	return r.value
 }
 
-func (r Result) Error() error {
+func (r Result[T]) Error() error {
 	return r.err
 }
 
-type CallbackFunc func(ctx context.Context, value interface{}) JobResult
+type CallbackFunc[T any, K any] func(ctx context.Context, value T) JobResult[K]
 
 // DoWorkFromSlice run async job from given slice
-func DoWorkFromSlice(ctx context.Context, items []interface{}, callback CallbackFunc, workerSize uint) chan JobResult {
+func DoWorkFromSlice[T, K any](ctx context.Context, items []T, callback CallbackFunc[T, K], workerSize uint) chan JobResult[K] {
 
 	// do not spawn more workers than size of items to process
 	if uint(len(items)) < workerSize {
 		workerSize = uint(len(items))
 	}
 	// create work chan
-	work := make(chan interface{}, workerSize)
+	work := make(chan T, workerSize)
 
 	// create worker pool
-	res := DoWork(ctx, work, callback, workerSize)
+	res := DoWork[T](ctx, work, callback, workerSize)
 
 	// send jobs to channel
 	go func() {
@@ -75,13 +76,13 @@ func DoWorkFromSlice(ctx context.Context, items []interface{}, callback Callback
 }
 
 // DoWork run async job from given channel
-func DoWork(ctx context.Context, workCh <-chan interface{}, callback CallbackFunc, workerSize uint) chan JobResult {
+func DoWork[T, K any](ctx context.Context, workCh <-chan T, callback CallbackFunc[T, K], workerSize uint) chan JobResult[K] {
 	// make result channel same size
-	res := make(chan JobResult, workerSize)
+	res := make(chan JobResult[K], workerSize)
 
 	// start wait group
 	w := sync.WaitGroup{}
-	workerFunc := func(ctx context.Context, work <-chan interface{}) {
+	workerFunc := func(ctx context.Context, work <-chan T) {
 		defer func() {
 			w.Done()
 		}()
@@ -99,7 +100,7 @@ func DoWork(ctx context.Context, workCh <-chan interface{}, callback CallbackFun
 					defer func() {
 						// recover from panic
 						if err := recover(); err != nil {
-							res <- AsyncPanicError{err: err.(error)}
+							res <- AsyncPanicError[K]{err: err.(error)}
 						}
 					}()
 
