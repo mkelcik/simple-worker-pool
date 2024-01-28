@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"runtime"
 
-	pool "github.com/mkelcik/simple-worker-pool"
+	pool "github.com/mkelcik/simple-worker-pool/v2"
 )
 
 type MyStruct struct {
