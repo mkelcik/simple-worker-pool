@@ -14,7 +14,7 @@ func main() {
 	poolSize := uint(runtime.NumCPU())
 
 	// try to compare with processing only in one thread
-	// poolSize := uint(1)
+	// poolSize = uint(1)
 
 	// find primes_slice in first N numbers
 	sizeToCheck := 100_000
