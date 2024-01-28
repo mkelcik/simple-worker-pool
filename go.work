@@ -1,0 +1,8 @@
+go 1.21
+
+use (
+	examples/from_slice
+	./examples/primes_slice
+	./examples/primes_chan
+	.
+)

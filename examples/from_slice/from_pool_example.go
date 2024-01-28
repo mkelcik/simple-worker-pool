@@ -1,10 +1,3 @@
-# Simple worker pool
-
-Simple way to process your dataset via worker pool. You can use slice `DoWorkFromSlice` or channel `DoWork` as input to pool.
-Callback then return `JobResult` or nil. If nil is returned nothing is written to result channel.
-
-### How to use:
-```go
 package main
 
 import (
@@ -12,7 +5,7 @@ import (
 	"fmt"
 	"runtime"
 
-	pool "github.com/mkelcik/simple-worker-pool"
+	pool "github.com/mkelcik/simple-worker-pool/v2"
 )
 
 type MyStruct struct {
@@ -33,9 +26,3 @@ func main() {
 		fmt.Println(res.Result())
 	}
 }
-```
-
-
-## Examples:  
-
-See `examples` folder.
